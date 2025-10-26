@@ -27,7 +27,8 @@ function Event() {
       // get xml data
       try {
         const response = await fetch(
-          "https://jagsync.tamusa.edu/organization/acm/events.rss"
+          profile?.organizations?.link ||
+            "https://jagsync.tamusa.edu/organization/acm/events.rss"
         );
         if (!response.ok) {
           throw new Error("Failed to fetch XML");
@@ -48,14 +49,21 @@ function Event() {
             : [rawItems]
           : [];
 
+        const idParam = String(id);
         const foundItem = itemsArray.find((item: any) => {
-          const guidStr = String(item.guid ?? "");
+          // guid can be a string or an object like { '#text': '...' } depending on the XML parser options
+          let guidRaw: any = item.guid ?? "";
+          if (typeof guidRaw === "object" && guidRaw !== null) {
+            guidRaw = guidRaw["#text"] ?? guidRaw["text"] ?? "";
+          }
+          const guidStr = String(guidRaw);
           const idMatch = guidStr.match(/(\d+)$/);
           const itemId = idMatch ? idMatch[1] : guidStr;
-          return itemId === id;
+          return itemId === idParam;
         });
 
         if (foundItem) {
+          console.log("Found event item:", foundItem);
           // make call to supabase to get associated budget data
           // fetch plan rows for this event
           const { data: planRows, error: planError } = await supabase
@@ -127,6 +135,8 @@ function Event() {
             };
           }
 
+
+          
           const guidStr = String(foundItem.guid ?? "");
           const idMatch = guidStr.match(/(\d+)$/);
           const eventId = idMatch ? idMatch[1] : guidStr;
@@ -143,8 +153,6 @@ function Event() {
             endDate: new Date(foundItem.end),
             eventPlans: eventPlans,
           });
-        } else {
-          setError("Event not found.");
         }
       } catch (error) {
         setError("An error occurred while fetching the event.");
