@@ -19,8 +19,14 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="auth" element={<Auth />} />
             <Route path="event/:id" element={<Event />} />
-            <Route path="event/:id/create-event-plan" element={<CreateEventPlan />} />
-            <Route path="event/:id/update-event-plan" element={<UpdateEventPlan />} />
+            <Route
+              path="event/:id/create-event-plan"
+              element={<CreateEventPlan />}
+            />
+            <Route
+              path="event/:id/edit-event-plan"
+              element={<UpdateEventPlan />}
+            />
           </Route>
         </Routes>
       </AuthProvider>

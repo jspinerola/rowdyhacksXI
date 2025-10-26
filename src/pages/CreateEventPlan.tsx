@@ -164,8 +164,11 @@ function CreateEventPlan() {
       // get xml data
       try {
         const response = await fetch(
-          "https://jagsync.tamusa.edu/organization/acm/events.rss"
+          profile?.organizations?.link ||
+            "https://jagsync.tamusa.edu/organization/acm/events.rss"
         );
+
+        console.log("link used for fetch:", profile?.organizations?.link);
         if (!response.ok) {
           throw new Error("Failed to fetch XML");
         }
@@ -193,19 +196,35 @@ function CreateEventPlan() {
         });
 
         if (foundItem) {
-          // make call to supabase to get associated budget data
-          const { data: EventPlans } = await supabase
-            .from("plan")
-            .select("*")
-            .eq("event_id", id);
+          console.log("Found item:", foundItem);
 
-          if (EventPlans) {
-            console.log("Fetched EventPlans:", EventPlans[0]);
+          // --- THIS IS THE BUG FIX ---
+          // 1. Check if a plan ALREADY exists for this event
+          const { data: existingPlan, error: planError } = await supabase
+            .from("plan")
+            .select("plan_id") // We just need to check if it exists
+            .eq("event_id", id)
+            .maybeSingle(); // Get one record or null
+
+          if (planError) {
+            console.error("Error checking for existing plan:", planError);
+            // Not throwing error, but logging it.
+            // We can proceed to set event state.
           }
 
-          const eventPlans =
-            EventPlans && EventPlans.length > 0 ? EventPlans[0] : undefined;
+          // 2. If a plan *is* found, redirect away from this "Create" page
+          if (existingPlan) {
+            console.warn(
+              "A plan already exists for this event. Redirecting..."
+            );
+            // Redirect to the event details page
+            window.location.href = `/event/${id}`;
+            return; // Stop executing the rest of this function
+          }
+          // --- END OF BUG FIX ---
 
+          // If we are here, no plan was found.
+          // It's safe to set the event and let the user create a plan.
           const guidStr = String(foundItem.guid ?? "");
           const idMatch = guidStr.match(/(\d+)$/);
           const eventId = idMatch ? idMatch[1] : guidStr;
@@ -220,7 +239,7 @@ function CreateEventPlan() {
             descriptionHtml: foundItem.description,
             startDate: new Date(foundItem.start),
             endDate: new Date(foundItem.end),
-            eventPlans: eventPlans,
+            eventPlans: undefined, // No plan exists
           });
         } else {
           setError("Event not found.");
@@ -233,7 +252,7 @@ function CreateEventPlan() {
     };
 
     fetchEvent();
-  }, [id, profile?.organization_id]);
+  }, [id, profile?.organization_id, profile]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -260,7 +279,7 @@ function CreateEventPlan() {
 
       <Button
         onClick={handleSubmitPlan}
-        disabled={expenses.length < 1}
+        disabled={expenses.length <= 1}
         title={
           expenses.length < 1
             ? "Add at least 2 expenses to submit the plan"

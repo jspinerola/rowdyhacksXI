@@ -19,7 +19,7 @@ function Budget({
 }: {
   organizationBalance: number | null;
   remainingBalance: number | null;
-  expenses: Expense[];  
+  expenses: Expense[];
   handleAddExpense: (name: string, amount: number) => void;
   handleDeleteExpense: (id: string) => void;
 }) {
