@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { XMLParser } from "fast-xml-parser";
 import { Card, CardAction, CardTitle } from "./ui/card";
 import { Link } from "react-router";
+import { Button } from "./ui/button";
 
 function Events({ organizationLink }: { organizationLink?: string }) {
   console.log("Events props:", { organizationLink });
@@ -98,10 +99,10 @@ function Events({ organizationLink }: { organizationLink?: string }) {
             <CardTitle>{event.title}</CardTitle>
             <div className="flex gap-2 mt-2">
               <Link to={event.link} target="_blank" rel="noopener noreferrer">
-                <CardAction>View JagSync</CardAction>
+                <Button>View JagSync</Button>
               </Link>
               <Link to={"/event/" + event.id}>
-                <CardAction>View Details</CardAction>
+                <Button>View Details</Button>
               </Link>
             </div>
           </Card>
