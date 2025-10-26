@@ -8,4 +8,9 @@ export interface EventDetails {
   startDate: Date;
   endDate: Date;
   imageUrl?: string;
+  eventPlans?: EventPlans;
+}
+
+export interface EventPlans {
+  budget?: number;
 }

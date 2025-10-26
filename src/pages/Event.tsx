@@ -1,8 +1,10 @@
-import type { EventDetails } from "@/types/event";
+import type { EventDetails, EventPlans } from "@/types/event";
 import EventDetailsCard from "@/components/event/EventDetailsCard";
 import { XMLParser } from "fast-xml-parser";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
 
 function Event() {
   const { id } = useParams();
@@ -19,6 +21,7 @@ function Event() {
     }
 
     const fetchEvent = async () => {
+      // get xml data
       try {
         const response = await fetch(
           "https://jagsync.tamusa.edu/organization/acm/events.rss"
@@ -50,6 +53,19 @@ function Event() {
         });
 
         if (foundItem) {
+          // make call to supabase to get associated budget data
+          const { data: EventPlans } = await supabase
+            .from("plan")
+            .select("*")
+            .eq("event_id", id);
+
+          if (EventPlans) {
+            console.log("Fetched EventPlans:", EventPlans[0]);
+          }
+
+          const eventPlans =
+            EventPlans && EventPlans.length > 0 ? EventPlans[0] : undefined;
+
           const guidStr = String(foundItem.guid ?? "");
           const idMatch = guidStr.match(/(\d+)$/);
           const eventId = idMatch ? idMatch[1] : guidStr;
@@ -64,6 +80,7 @@ function Event() {
             descriptionHtml: foundItem.description,
             startDate: new Date(foundItem.start),
             endDate: new Date(foundItem.end),
+            eventPlans: eventPlans,
           });
         } else {
           setError("Event not found.");
@@ -101,8 +118,14 @@ function Event() {
         <aside className="md:col-span-1 bg-white border rounded-md p-4 shadow-sm">
           <h3 className="font-semibold mb-3">Future Component Here</h3>
           <p className="text-sm text-gray-600">
-            Placeholder section reserved for future interactive widgets or
-            components (e.g., RSVP, map, schedule).
+            {!event.eventPlans && (
+              <>
+                <p>Looks like no plan have been made yet...</p>
+                <Link to={`/event/${event.id}/create-event-plan`}>
+                  <Button>Create Event Plan</Button>
+                </Link>
+              </>
+            )}
           </p>
         </aside>
       </div>
