@@ -7,6 +7,7 @@ import Auth from "./pages/Auth";
 import { AuthProvider } from "./context/AuthContext";
 import Event from "./pages/Event";
 import CreateEventPlan from "./pages/CreateEventPlan";
+import UpdateEventPlan from "./pages/UpdateEventPlan";
 
 function App() {
   return (

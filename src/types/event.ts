@@ -1,3 +1,5 @@
+import type { Expense } from "./expense";
+
 export interface EventDetails {
   id: string; // from <guid>
   title: string;
@@ -12,5 +14,13 @@ export interface EventDetails {
 }
 
 export interface EventPlans {
-  budget?: number;
+  budget?: Budget;
+  // add itinierary and other fields as needed
+}
+
+export interface Budget {
+  organizationBalance: number | null;
+  remainingBalance: number | null;
+  expenses: Expense[];
+  totalExpenses: number;
 }

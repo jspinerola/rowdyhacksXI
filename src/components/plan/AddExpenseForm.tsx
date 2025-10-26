@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import { cn } from "@/lib/utils";
+import type { Expense } from "@/types/expense";
 
 interface AddExpenseFormProps {
   onAddExpense: (name: string, amount: number) => void;

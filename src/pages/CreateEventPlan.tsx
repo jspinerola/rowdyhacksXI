@@ -1,7 +1,6 @@
 import Budget from "@/components/plan/Budget";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { handleAddExpense, handleDeleteExpense } from "@/lib/budget";
 import { supabase } from "@/lib/supabase";
 import type { EventDetails } from "@/types/event";
 import type { Expense } from "@/types/expense";
@@ -21,6 +20,7 @@ function CreateEventPlan() {
   // here we can add gemini api to generate initial expense ideas based on event details
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
+  console.log("Current expenses:", expenses);
   const totalExpenses = useMemo(() => {
     return expenses.reduce((total, expense) => total + expense.amount, 0);
   }, [expenses]);
@@ -28,7 +28,25 @@ function CreateEventPlan() {
   const remainingBalance =
     organizationBalance !== null ? organizationBalance - totalExpenses : null;
 
+  // Adds a new expense to the list
+  const handleAddExpense = useCallback((name: string, amount: number) => {
+    const newExpense: Expense = {
+      id: crypto.randomUUID(), // Creates a random, unique ID
+      name,
+      amount,
+    };
 
+    console.log("Adding expense:", newExpense);
+    // Add the new expense to the existing list
+    setExpenses((prevExpenses) => [...prevExpenses, newExpense]);
+  }, []); // Empty dependency array means this function is created only once
+
+  // Removes an expense from the list by its ID
+  const handleDeleteExpense = useCallback((id: string) => {
+    setExpenses((prevExpenses) =>
+      prevExpenses.filter((expense) => expense.id !== id)
+    );
+  }, []);
 
   const { profile } = useAuth();
 
@@ -242,11 +260,11 @@ function CreateEventPlan() {
 
       <Button
         onClick={handleSubmitPlan}
-        disabled={expenses.length === 0}
+        disabled={expenses.length < 1}
         title={
-          expenses.length === 0
-            ? "Add at least one expense to submit the plan"
-            : undefined
+          expenses.length < 1
+            ? "Add at least 2 expenses to submit the plan"
+            : "Submit plan"
         }
       >
         Submit Plan

@@ -5,10 +5,13 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import ExpenseItem from "@/components/plan/ExpenseItem";
 
 function Event() {
   const { id } = useParams();
 
+  const { profile } = useAuth();
   const [event, setEvent] = useState<EventDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,17 +57,75 @@ function Event() {
 
         if (foundItem) {
           // make call to supabase to get associated budget data
-          const { data: EventPlans } = await supabase
+          // fetch plan rows for this event
+          const { data: planRows, error: planError } = await supabase
             .from("plan")
             .select("*")
-            .eq("event_id", id);
+            .eq("event_id", Number(id));
 
-          if (EventPlans) {
-            console.log("Fetched EventPlans:", EventPlans[0]);
+          if (planError) {
+            console.error("Error fetching plan:", planError);
           }
 
-          const eventPlans =
-            EventPlans && EventPlans.length > 0 ? EventPlans[0] : undefined;
+          const plan =
+            planRows && planRows.length > 0 ? planRows[0] : undefined;
+
+          console.log("Fetched plan for event ID:", id, plan);
+
+          let eventPlans: EventPlans | undefined = undefined;
+          let organizationBalance: number | null = null;
+
+          if (plan && plan.plan_id) {
+            console.log("Found plan for event:", plan);
+            // fetch expenses for the plan
+            const { data: expensesData, error: expensesError } = await supabase
+              .from("expenses")
+              .select("*")
+              .eq("plan_id", plan.plan_id);
+
+            if (expensesError) {
+              console.error("Error fetching expenses:", expensesError);
+            }
+
+            const expenses = expensesData ?? [];
+
+            // fetch organization balance (try common field names)
+            const orgId = profile?.organization_id;
+
+            if (orgId != null) {
+              const { data: orgData, error: orgError } = await supabase
+                .from("organizations")
+                .select("balance")
+                .eq("id", orgId)
+                .maybeSingle();
+
+              if (orgError) {
+                console.error("Error fetching organization:", orgError);
+              }
+
+              organizationBalance = orgData?.balance ?? null;
+            }
+
+            // calculate total expenses (assumes each expense has an `amount` field)
+            const totalExpenses = expenses.reduce(
+              (sum: number, e: any) => sum + (Number(e?.amount) || 0),
+              0
+            );
+
+            const remainingBalance =
+              organizationBalance !== null
+                ? organizationBalance - totalExpenses
+                : null;
+
+            eventPlans = {
+              budget: {
+                organizationBalance,
+                remainingBalance,
+                expenses,
+                totalExpenses,
+              },
+            };
+          }
 
           const guidStr = String(foundItem.guid ?? "");
           const idMatch = guidStr.match(/(\d+)$/);
@@ -93,7 +154,7 @@ function Event() {
     };
 
     fetchEvent();
-  }, [id]);
+  }, [id, profile]);
 
   if (loading) {
     return <div>Loading...</div>;
@@ -116,14 +177,43 @@ function Event() {
         </div>
 
         <aside className="md:col-span-1 bg-white border rounded-md p-4 shadow-sm">
-          <h3 className="font-semibold mb-3">Future Component Here</h3>
-          <p className="text-sm text-gray-600">
-            {!event.eventPlans && (
+          <div className="flex justify-between">
+            {!event.eventPlans ? (
+              <h3>No Plans Yet</h3>
+            ) : (
               <>
-                <p>Looks like no plan have been made yet...</p>
+                <h3>Plans</h3>
+                <Link to={`/event/${event.id}/edit-event-plan`}>
+                  <Button>Edit Event Plan</Button>
+                </Link>
+              </>
+            )}
+          </div>
+          <p className="text-sm text-gray-600">
+            {!event.eventPlans ? (
+              <>
+                <p className="mb-4">Looks like no plan have been made yet...</p>
                 <Link to={`/event/${event.id}/create-event-plan`}>
                   <Button>Create Event Plan</Button>
                 </Link>
+              </>
+            ) : (
+              <>
+                <h4>Budget Details</h4>
+                <p>
+                  Total Expenses: $
+                  {event.eventPlans.budget?.totalExpenses ?? "N/A"}
+                </p>
+                <ul className="divide-y divide-gray-200">
+                  {event.eventPlans.budget?.expenses.map((expense) => (
+                    <ExpenseItem
+                      key={expense.id}
+                      expense={expense}
+                      onDelete={null}
+                    />
+                  ))}
+                </ul>
+                {}
               </>
             )}
           </p>

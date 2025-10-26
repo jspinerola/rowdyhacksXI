@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   expense: Expense;
-  onDelete: (id: string) => void;
+  onDelete: ((id: string) => void) | null;
 };
 
 function ExpenseItem({ expense, onDelete }: Props) {
@@ -19,6 +19,7 @@ function ExpenseItem({ expense, onDelete }: Props) {
         <div className={cn("text-sm font-semibold")}>
           ${Number(expense.amount ?? 0).toFixed(2)}
         </div>
+        {onDelete && (
         <Button
           variant="destructive"
           size="sm"
@@ -26,6 +27,7 @@ function ExpenseItem({ expense, onDelete }: Props) {
         >
           Delete
         </Button>
+        )}
       </div>
     </li>
   );

@@ -19,16 +19,9 @@ function Budget({
 }: {
   organizationBalance: number | null;
   remainingBalance: number | null;
-  expenses: Expense[];
-  handleAddExpense: (
-    setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>,
-    name: string,
-    amount: number
-  ) => void;
-  handleDeleteExpense: (
-    setExpenses: React.Dispatch<React.SetStateAction<Expense[]>>,
-    id: string
-  ) => void;
+  expenses: Expense[];  
+  handleAddExpense: (name: string, amount: number) => void;
+  handleDeleteExpense: (id: string) => void;
 }) {
   return (
     <Card className="max-w-3xl">
