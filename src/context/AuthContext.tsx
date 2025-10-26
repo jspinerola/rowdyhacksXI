@@ -34,34 +34,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select("id, username")
       .eq("id", userId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error("Error fetching profile:", error);
       setProfile(null);
+      return null;
     } else {
       console.log("Fetched profile:", data);
-      setProfile(data);
+      setProfile(data ?? null);
+      return data ?? null;
     }
   };
 
   // signIn, signUp, signOut declared at component scope so they are available to the provider value
   const signIn = async (email: string, password: string) => {
+    // Let onAuthStateChange update session/user/profile.
+    setLoading(true);
     try {
-      setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        console.error("Error signing in:", error);
-        return;
-      }
-      setSession(data.session ?? null);
-      setUser(data.user ?? null);
-      if (data.user) await fetchProfile(data.user.id);
+      await supabase.auth.signInWithPassword({ email, password });
     } finally {
       setLoading(false);
     }
@@ -73,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         console.error("Error signing up:", error);
-        return;
+        throw error;
       }
 
       // insert into profiles table with values
@@ -84,6 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (profileError) {
           console.error("Error creating profile:", profileError);
+          throw profileError;
         } else {
           await fetchProfile(data.user.id);
         }
@@ -109,27 +103,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // initialize auth state
-    const initalizeAuth = async () => {
-      try {
-        setLoading(true);
-        const { data } = await supabase.auth.getSession();
-        const currentSession = data?.session ?? null;
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+    let alive = true;
+    setLoading(true);
 
-        if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id);
-        }
-      } catch (err) {
-        console.error("Error initializing auth:", err);
-      } finally {
-        setLoading(false);
+    // Seed from cached session (prevents "signed out" right after redirect)
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!alive) return;
+        const s = data.session ?? null;
+        setSession(s);
+        setUser(s?.user ?? null);
+      })
+      .finally(() => alive && setLoading(false));
+
+    // Subscribe to future changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, s) => {
+        if (!alive) return;
+        setSession(s);
+        setUser(s?.user ?? null);
       }
-    };
+    );
 
-    initalizeAuth();
+    return () => {
+      alive = false;
+      authListener?.subscription.unsubscribe();
+    };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.id) {
+      setProfile(null);
+      return;
+    }
+    (async () => {
+      console.log("AuthContext: user changed → fetching profile");
+      await fetchProfile(user.id);
+      if (!cancelled) {
+        // no-op; fetchProfile already set state
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider
