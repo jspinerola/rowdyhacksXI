@@ -6,6 +6,8 @@ import Layout from "./components/Layout";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./context/AuthContext";
 import Event from "./pages/Event";
+import CreateEventPlan from "./pages/CreateEventPlan";
+import UpdateEventPlan from "./pages/UpdateEventPlan";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
             <Route path="about" element={<About />} />
             <Route path="auth" element={<Auth />} />
             <Route path="event/:id" element={<Event />} />
+            <Route path="event/:id/create-event-plan" element={<CreateEventPlan />} />
+            <Route path="event/:id/update-event-plan" element={<UpdateEventPlan />} />
           </Route>
         </Routes>
       </AuthProvider>
