@@ -2,9 +2,16 @@ import React, { createContext, useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
+interface Organization {
+  name: string;
+  link: string;
+}
+
 interface Profile {
   id: string;
   username?: string;
+  organization_id?: number;
+  organizations: Organization | null;
 }
 
 interface AuthContextProps {
@@ -34,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, username")
+      .select("id, username, organization_id, organizations ( name, link )")
       .eq("id", userId)
       .maybeSingle();
 

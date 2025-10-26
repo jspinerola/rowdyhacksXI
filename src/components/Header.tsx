@@ -10,9 +10,9 @@ const Header: React.FC = () => {
   return (
     <header style={{ padding: 16, borderBottom: "1px solid #e5e7eb" }}>
       <nav style={{ display: "flex", gap: 12 }}>
-        <h1 style={{ marginRight: 12 }}>
+        <p style={{ marginRight: 12 }}>
           {profile ? `Hi, ${profile.username}` : "Signed out"}
-        </h1>
+        </p>
 
         {profile ? (
           <button onClick={signOut} aria-label="Sign out">
