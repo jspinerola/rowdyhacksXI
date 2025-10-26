@@ -2,6 +2,8 @@ import React from "react";
 import type { EventDetails } from "@/types/event";
 import EventImage from "./EventImage";
 import EventMeta from "./EventMeta";
+import { Button } from "../ui/button";
+import { Link } from "react-router";
 
 type Props = {
   event: EventDetails;
@@ -33,11 +35,13 @@ const EventDetailsCard: React.FC<Props> = ({ event }) => {
       <div className="mt-6">
         <a
           href={event.link}
-          className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="inline-block "
           target="_blank"
           rel="noreferrer"
         >
-          View original event
+          <Link to={event.link} target="_blank" rel="noopener noreferrer">
+            <Button>View original event</Button>
+          </Link>
         </a>
       </div>
     </article>

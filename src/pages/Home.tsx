@@ -13,7 +13,7 @@ function Home() {
           {profile.organizations?.name}'s events:
         </h1>
       ) : (
-        <h1>Welcome to our site! Please sign in.</h1>
+        <h1>Welcome to Budget It! Please sign in.</h1>
       )}
 
       <Events organizationLink={profile?.organizations?.link} />

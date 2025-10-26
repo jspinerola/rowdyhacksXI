@@ -9,20 +9,22 @@ const Header: React.FC = () => {
 
   return (
     <header style={{ padding: 16, borderBottom: "1px solid #e5e7eb" }}>
-      <nav style={{ display: "flex", gap: 12 }}>
-        <p style={{ marginRight: 12 }}>
-          {profile ? `Hi, ${profile.username}` : "Signed out"}
-        </p>
+      <nav className="flex justify-between">
+        <strong>Budget It</strong>
+        <div className="flex gap-8">
+          <p style={{ marginRight: 12 }}>
+            {profile ? `Hi, ${profile.username}` : "Signed out"}
+          </p>
 
-        {profile ? (
-          <button onClick={signOut} aria-label="Sign out">
-            Sign out
-          </button>
-        ) : (
-          <Link to="/auth">Sign in</Link>
-        )}
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
+          {profile ? (
+            <button onClick={signOut} aria-label="Sign out">
+              Sign out
+            </button>
+          ) : (
+            <Link to="/auth">Sign in</Link>
+          )}
+          <Link to="/">Home</Link>
+        </div>
       </nav>
     </header>
   );
