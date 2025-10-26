@@ -5,6 +5,7 @@ import About from "./pages/About";
 import Layout from "./components/Layout";
 import Auth from "./pages/Auth";
 import { AuthProvider } from "./context/AuthContext";
+import Event from "./pages/Event";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="about" element={<About />} />
             <Route path="auth" element={<Auth />} />
+            <Route path="event/:id" element={<Event />} />
           </Route>
         </Routes>
       </AuthProvider>
